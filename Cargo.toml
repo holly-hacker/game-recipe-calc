@@ -1,0 +1,11 @@
+[package]
+name = "game-recipe-calc"
+version = "0.1.0"
+edition = "2021"
+description = ""
+readme = "README.md"
+repository = "https://github.com/holly-hacker/game-recipe-calc"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+yew = { version="0.20", features=["csr"] }
