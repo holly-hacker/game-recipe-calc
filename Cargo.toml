@@ -8,4 +8,5 @@ repository = "https://github.com/holly-hacker/game-recipe-calc"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+web-sys = { version = "0.3", features = ["HtmlTextAreaElement"] }
 yew = { version="0.20", features=["csr"] }
