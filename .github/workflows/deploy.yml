@@ -27,7 +27,7 @@ jobs:
       with:
         version: 'latest'
     - name: Build
-      run: trunk build
+      run: trunk build --public-url /game-recipe-calc
     - name: Deploy demo
       uses: JamesIves/github-pages-deploy-action@v4.2.2
       with:
