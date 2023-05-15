@@ -1,4 +1,5 @@
 mod app;
+mod logic;
 
 use app::App;
 

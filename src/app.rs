@@ -26,13 +26,8 @@ pub fn app() -> Html {
 }
 
 fn transform_text(text: &str) -> String {
-    text.chars()
-        .map(|c| {
-            if c.is_uppercase() {
-                c.to_ascii_lowercase()
-            } else {
-                c.to_ascii_uppercase()
-            }
-        })
-        .collect()
+    match super::logic::Program::parse_from_string(text) {
+        Ok(v) => format!("{v:#?}"),
+        Err(e) => format!("Error: {e}"),
+    }
 }
