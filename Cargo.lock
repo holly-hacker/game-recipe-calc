@@ -147,7 +147,9 @@ dependencies = [
 name = "game-recipe-calc"
 version = "0.1.0"
 dependencies = [
+ "monaco",
  "nom",
+ "wasm-bindgen",
  "web-sys",
  "yew",
 ]
@@ -394,6 +396,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
+name = "monaco"
+version = "0.3.0"
+source = "git+https://github.com/siku2/rust-monaco/?rev=794a4cc7819f9ed7eb06559e24f75a41e23cf22a#794a4cc7819f9ed7eb06559e24f75a41e23cf22a"
+dependencies = [
+ "js-sys",
+ "paste",
+ "wasm-bindgen",
+ "web-sys",
+ "yew",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -418,6 +432,12 @@ name = "once_cell"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
+
+[[package]]
+name = "paste"
+version = "1.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 
 [[package]]
 name = "percent-encoding"
