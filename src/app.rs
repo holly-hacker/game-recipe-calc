@@ -1,8 +1,7 @@
 use monaco::{
     api::TextModel,
     sys::editor::{
-        IDimension, IEditorMinimapOptions, IModelContentChangedEvent,
-        IStandaloneEditorConstructionOptions,
+        IEditorMinimapOptions, IModelContentChangedEvent, IStandaloneEditorConstructionOptions,
     },
     yew::CodeEditor,
 };
@@ -33,11 +32,7 @@ pub fn app() -> Html {
         let minimap_options = IEditorMinimapOptions::default();
         minimap_options.set_enabled(Some(false));
 
-        let dimensions = IDimension::new(512, 384);
-
         let options = IStandaloneEditorConstructionOptions::default();
-
-        options.set_dimension(Some(&dimensions));
         options.set_folding(Some(false));
         options.set_line_numbers_min_chars(Some(3.));
         options.set_minimap(Some(&minimap_options));
@@ -48,9 +43,9 @@ pub fn app() -> Html {
     });
 
     html! {
-        <div style={"padding: 1rem"}>
-            <CodeEditor options={(*options).clone()} model={(*text_model).clone()} />
-            <pre>{ transform_text(&text) }</pre>
+        <div class="main-container">
+            <CodeEditor classes="input" options={(*options).clone()} model={(*text_model).clone()} />
+            <pre class="output">{ transform_text(&text) }</pre>
         </div>
     }
 }
