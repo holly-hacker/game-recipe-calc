@@ -1,5 +1,7 @@
 mod parsing;
 
+use log::{debug, error};
+
 #[derive(Debug)]
 pub struct Program {
     pub need_section: NeedSection,
@@ -9,10 +11,20 @@ pub struct Program {
 
 impl Program {
     pub fn parse_from_string(input: &str) -> Result<Self, String> {
+        debug!("Parsing input with length {}", input.len());
         match parsing::program(input) {
-            Ok(("", output)) => Ok(output),
-            Ok((remaining, _)) => Err(format!("Remaining: {remaining}")),
-            Err(e) => Err(format!("{}", e)),
+            Ok(("", output)) => {
+                info!("Parsed input");
+                Ok(output)
+            }
+            Ok((remaining, _)) => {
+                error!("Parsed input but {} chars were remaining", remaining.len());
+                Err(format!("Remaining: {remaining}"))
+            }
+            Err(e) => {
+                error!("Error while parsing input: {}", e);
+                Err(format!("{}", e))
+            }
         }
     }
 }
