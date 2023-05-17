@@ -1,6 +1,7 @@
+mod evaluation;
 mod parsing;
 
-use log::{debug, error};
+use log::{debug, error, info};
 
 #[derive(Debug)]
 pub struct Program {
@@ -27,24 +28,42 @@ impl Program {
             }
         }
     }
+
+    pub fn evaluate(&self) -> String {
+        let needed = evaluation::calculate_stuff(self);
+
+        let mut result = String::new();
+
+        for stack in needed {
+            result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+        }
+
+        result
+    }
 }
 
 #[derive(Debug)]
-pub struct NeedSection(Vec<ItemWithCount>);
+pub struct NeedSection(Vec<ItemStack>);
 
 #[derive(Debug)]
-pub struct HaveSection(Vec<ItemWithCount>);
+pub struct HaveSection(Vec<ItemStack>);
 
 #[derive(Debug)]
 pub struct RecipeSection(Vec<Recipe>);
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Recipe(ItemWithCount, Vec<ItemWithCount>);
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Recipe {
+    pub output: ItemStack,
+    pub inputs: Vec<ItemStack>,
+}
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ItemWithCount(u64, Item);
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct ItemStack {
+    count: u64,
+    item: Item,
+}
 
-#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Item(String);
 
 impl Item {

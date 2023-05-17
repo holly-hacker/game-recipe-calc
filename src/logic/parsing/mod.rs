@@ -8,7 +8,7 @@ use nom::{
     IResult, Parser,
 };
 
-use super::{HaveSection, Item, ItemWithCount, NeedSection, Program, Recipe, RecipeSection};
+use super::{HaveSection, Item, ItemStack, NeedSection, Program, Recipe, RecipeSection};
 
 /// Parses a full program.
 pub fn program(input: &str) -> IResult<&str, Program> {
@@ -64,17 +64,17 @@ fn recipe(input: &str) -> IResult<&str, Recipe> {
 
     let (input, (output, inputs)) = recipe.parse(input)?;
 
-    Ok((input, Recipe(output, inputs)))
+    Ok((input, Recipe { output, inputs }))
 }
 
 /// An item with a count, such as `1 wood` or `10 diamond shovel`.
-fn item_with_count(input: &str) -> IResult<&str, ItemWithCount> {
+fn item_with_count(input: &str) -> IResult<&str, ItemStack> {
     let count = nom::character::complete::u64;
     let space = take_while1(|c| c == ' ');
 
     let (input, (count, _, item)) = (count, space, item).parse(input)?;
 
-    Ok((input, ItemWithCount(count, item)))
+    Ok((input, ItemStack { count, item }))
 }
 
 /// An item name, such as `wood` or `diamond shovel`.
@@ -98,7 +98,7 @@ fn fuzzy_line_ending(input: &str) -> IResult<&str, &str> {
 mod tests {
     use nom::character::complete::{alpha1, alphanumeric1};
 
-    use crate::logic::{parsing::*, Item, ItemWithCount, Recipe};
+    use crate::logic::{parsing::*, Item, ItemStack, Recipe};
 
     #[test]
     fn smoke_test_example_input() {
@@ -142,49 +142,82 @@ mod tests {
             recipe("1 output = 1 input"),
             Ok((
                 "",
-                Recipe(
-                    ItemWithCount(1, Item::new("output")),
-                    vec![ItemWithCount(1, Item::new("input"))]
-                )
+                Recipe {
+                    output: ItemStack {
+                        count: 1,
+                        item: Item::new("output")
+                    },
+                    inputs: vec![ItemStack {
+                        count: 1,
+                        item: Item::new("input")
+                    }]
+                }
             ))
         );
         assert_eq!(
             recipe("1 output = 2 input1 + 1 input2"),
             Ok((
                 "",
-                Recipe(
-                    ItemWithCount(1, Item::new("output")),
-                    vec![
-                        ItemWithCount(2, Item::new("input1")),
-                        ItemWithCount(1, Item::new("input2")),
+                Recipe {
+                    output: ItemStack {
+                        count: 1,
+                        item: Item::new("output")
+                    },
+                    inputs: vec![
+                        ItemStack {
+                            count: 2,
+                            item: Item::new("input1")
+                        },
+                        ItemStack {
+                            count: 1,
+                            item: Item::new("input2")
+                        },
                     ]
-                )
+                }
             ))
         );
         assert_eq!(
             recipe("1 output=2 input1+1 input2"),
             Ok((
                 "",
-                Recipe(
-                    ItemWithCount(1, Item::new("output")),
-                    vec![
-                        ItemWithCount(2, Item::new("input1")),
-                        ItemWithCount(1, Item::new("input2")),
+                Recipe {
+                    output: ItemStack {
+                        count: 1,
+                        item: Item::new("output")
+                    },
+                    inputs: vec![
+                        ItemStack {
+                            count: 2,
+                            item: Item::new("input1")
+                        },
+                        ItemStack {
+                            count: 1,
+                            item: Item::new("input2")
+                        },
                     ]
-                )
+                }
             ))
         );
         assert_eq!(
             recipe("1 output thing = 1 input thing + 2 input thing"),
             Ok((
                 "",
-                Recipe(
-                    ItemWithCount(1, Item::new("output thing")),
-                    vec![
-                        ItemWithCount(1, Item::new("input thing")),
-                        ItemWithCount(2, Item::new("input thing")),
+                Recipe {
+                    output: ItemStack {
+                        count: 1,
+                        item: Item::new("output thing")
+                    },
+                    inputs: vec![
+                        ItemStack {
+                            count: 1,
+                            item: Item::new("input thing")
+                        },
+                        ItemStack {
+                            count: 2,
+                            item: Item::new("input thing")
+                        },
                     ]
-                )
+                }
             ))
         );
     }
@@ -193,11 +226,23 @@ mod tests {
     fn test_item_with_count() {
         assert_eq!(
             item_with_count("1 item"),
-            Ok(("", ItemWithCount(1, Item::new("item"))))
+            Ok((
+                "",
+                ItemStack {
+                    count: 1,
+                    item: Item::new("item")
+                }
+            ))
         );
         assert_eq!(
             item_with_count("1 item thing"),
-            Ok(("", ItemWithCount(1, Item::new("item thing"))))
+            Ok((
+                "",
+                ItemStack {
+                    count: 1,
+                    item: Item::new("item thing")
+                }
+            ))
         );
     }
 

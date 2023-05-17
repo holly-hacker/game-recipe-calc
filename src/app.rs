@@ -52,8 +52,11 @@ pub fn app() -> Html {
 }
 
 fn transform_text(text: &str) -> String {
-    match super::logic::Program::parse_from_string(text) {
-        Ok(v) => format!("{v:#?}"),
-        Err(e) => format!("Error: {e}"),
-    }
+    let parsed = match super::logic::Program::parse_from_string(text) {
+        Ok(v) => v,
+        Err(e) => return format!("Error: {e}"),
+    };
+
+    // do test stuff
+    parsed.evaluate()
 }

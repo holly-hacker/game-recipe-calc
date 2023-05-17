@@ -2,10 +2,10 @@ need:
 - 1 diamond pickaxe
 
 have:
-- 2 wood
+- 2 plank
 - 1 diamond
 
 recipes:
 - 1 diamond pickaxe = 3 diamond + 2 stick
 - 4 stick = 2 plank
-- 4 plank = 1 wood
+- 4 plank = 1 log
