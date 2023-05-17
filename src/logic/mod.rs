@@ -30,11 +30,16 @@ impl Program {
     }
 
     pub fn evaluate(&self) -> String {
-        let needed = evaluation::calculate_stuff(self);
+        let context = evaluation::evaluate(self);
+
+        let context = match context {
+            Ok(c) => c,
+            Err(e) => return format!("Error during evaluation: {e:?}"),
+        };
 
         let mut result = String::new();
 
-        for stack in needed {
+        for stack in context.get_needed_items() {
             result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
         }
 

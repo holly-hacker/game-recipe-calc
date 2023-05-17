@@ -2,7 +2,7 @@ need:
 - 1 diamond pickaxe
 
 have:
-- 2 plank
+- 1 plank
 - 1 diamond
 
 recipes:
