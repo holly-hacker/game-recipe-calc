@@ -33,6 +33,7 @@ pub fn app() -> Html {
         minimap_options.set_enabled(Some(false));
 
         let options = IStandaloneEditorConstructionOptions::default();
+        options.set_automatic_layout(Some(true));
         options.set_folding(Some(false));
         options.set_line_numbers_min_chars(Some(3.));
         options.set_minimap(Some(&minimap_options));
