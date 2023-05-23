@@ -697,20 +697,20 @@ function __wbg_get_imports() {
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper232 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 81, __wbg_adapter_18);
+    imports.wbg.__wbindgen_closure_wrapper207 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 61, __wbg_adapter_18);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper439 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 150, __wbg_adapter_21);
+        const ret = makeMutClosure(arg0, arg1, 152, __wbg_adapter_21);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper537 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 164, __wbg_adapter_24);
+        const ret = makeMutClosure(arg0, arg1, 166, __wbg_adapter_24);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper893 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 294, __wbg_adapter_27);
+        const ret = makeMutClosure(arg0, arg1, 296, __wbg_adapter_27);
         return addHeapObject(ret);
     };
 
@@ -752,7 +752,7 @@ async function __wbg_init(input) {
     if (wasm !== undefined) return wasm;
 
     if (typeof input === 'undefined') {
-        input = new URL('game-recipe-calc-be8eb456edea9606_bg.wasm', import.meta.url);
+        input = new URL('game-recipe-calc-9cc1dd28161f43d9_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
