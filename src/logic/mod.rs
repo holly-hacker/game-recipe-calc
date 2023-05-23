@@ -39,7 +39,16 @@ impl Program {
 
         let mut result = String::new();
 
-        for stack in context.get_needed_items() {
+        // TODO: show which items will actually be used?
+
+        result.push_str("Missing items:\n");
+        for stack in context.get_missing_items() {
+            result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+        }
+        result.push('\n');
+
+        result.push_str("Leftover items after crafting:\n");
+        for stack in context.get_available_items() {
             result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
         }
 

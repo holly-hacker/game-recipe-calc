@@ -11,10 +11,8 @@ pub enum EvaluationError {
 pub struct Context {
     /// Items that can be used for crafting
     items_available: HashMap<Item, u64>,
-    /// Items that were requested and have been crafted. These items cannot be used for crafting.
-    items_output: HashMap<Item, u64>,
-    /// Items that we are missing, but are required to craft the requested items.
-    items_needed: HashMap<Item, u64>,
+    /// Items that are required to craft the item but are missing
+    items_missing: HashMap<Item, u64>,
 
     /// A map with a recipe for each item we can craft.
     recipes: HashMap<Item, Recipe>,
@@ -47,122 +45,93 @@ impl Context {
         ctx
     }
 
-    fn add_items(&mut self, items: &ItemStack) {
-        *self.items_available.entry(items.item.clone()).or_default() += items.count;
-    }
+    fn create_items(&mut self, item_needed: &ItemStack) -> Result<(), EvaluationError> {
+        let mut item_count_needed = item_needed.count;
+        log::debug!("Need {item_count_needed} of {}", &item_needed.item.0);
 
-    fn try_use_item(&mut self, items: &ItemStack) -> u64 {
-        if let Some(stored_count) = self.items_available.get_mut(&items.item) {
-            let old_count = *stored_count;
-            *stored_count = old_count.saturating_sub(items.count);
-            let used = old_count - *stored_count;
-            items.count - used
-        } else {
-            items.count
-        }
-    }
-
-    fn have_or_craft_item(
-        &mut self,
-        item_needed: &ItemStack,
-        top_level: bool,
-    ) -> Result<(), EvaluationError> {
-        // consume the existing items we have
-        let count_needed = self.try_use_item(item_needed);
-
-        if count_needed == 0 {
-            log::debug!("Satisfied requirement for {item_needed:?} using available items");
-        } else {
-            log::debug!(
-                "Missing {count_needed} {} for {item_needed:?}",
-                &item_needed.item.0
-            );
-            if let Some(recipe_to_use) = self.recipes.get(&item_needed.item) {
-                log::debug!("Found recipe {recipe_to_use:?}");
-                let recipe = recipe_to_use.clone(); // TODO: annoying lifetime hack
-
-                while self
-                    .items_available
-                    .get(&item_needed.item)
-                    .cloned()
-                    .unwrap_or_default()
-                    < count_needed
-                {
-                    self.evaluate_recipe(&recipe)?;
-                }
-            } else {
-                log::info!(
-                    "No recipe found for {:?}, registering {count_needed} items as 'needed'",
-                    item_needed.item
-                );
-                self.register_need_item(ItemStack {
-                    count: count_needed,
-                    item: item_needed.item.clone(),
-                });
-            }
-        }
-
-        if top_level {
-            // transfer this item to the output
-            *self
+        // try to take items from our existing stash
+        {
+            let count_available = self
                 .items_available
                 .entry(item_needed.item.clone())
-                .or_default() -= item_needed.count;
-            *self
-                .items_output
-                .entry(item_needed.item.clone())
-                .or_default() += item_needed.count;
+                .or_default();
+            let count_available_to_use = item_count_needed.min(*count_available);
+            log::debug!(
+                "{count_available} of {} is already available, will use {count_available_to_use}",
+                &item_needed.item.0
+            );
+            *count_available -= count_available_to_use;
+            item_count_needed -= count_available_to_use;
         }
+
+        // early return if we already have everything
+        if item_count_needed == 0 {
+            return Ok(());
+        }
+
+        // find a recipe to craft the remaining items needed
+        // this currently only supports recipes that return 1 item kind
+        let Some(recipe) = self.recipes.get(&item_needed.item).cloned() else {
+            // if no recipe is found, add these items to the missing items pile
+            log::info!("Could not find recipe to create {}, adding it to items required", item_needed.item.0);
+            *self.items_missing.entry(item_needed.item.clone()).or_default() += item_count_needed;
+
+            return Ok(());
+        };
+
+        // we have a known recipe, now execute it until we have all the items we need
+        // this is suboptimal, the loop will be executed many times for a large amount of items
+        let mut item_count_created = 0;
+        while item_count_created < item_count_needed {
+            self.depth += 1;
+
+            if self.depth > Self::MAX_DEPTH {
+                return Err(EvaluationError::MaxDepthExceeded);
+            }
+
+            for input in &recipe.inputs {
+                self.create_items(input)?;
+            }
+
+            // TODO: not actually creating the result?
+
+            self.depth -= 1;
+            item_count_created += recipe.output.count;
+        }
+
+        let items_created_too_many = item_count_created - item_count_needed;
+
+        *self
+            .items_available
+            .entry(item_needed.item.clone())
+            .or_default() += items_created_too_many;
 
         Ok(())
     }
 
-    fn evaluate_recipe(&mut self, recipe: &Recipe) -> Result<(), EvaluationError> {
-        // ensure we don't enter an infinite loop
-        if self.depth > Self::MAX_DEPTH {
-            return Err(EvaluationError::MaxDepthExceeded);
-        }
-        self.depth += 1;
-
-        log::debug!("Evaluating recipe {recipe:?}");
-        for input in &recipe.inputs {
-            self.have_or_craft_item(input, false)?;
-        }
-
-        self.add_items(&recipe.output);
-
-        self.depth -= 1;
-
-        Ok(())
+    fn cleanup(&mut self) {
+        self.items_available.retain(|_, v| *v != 0);
+        self.items_missing.retain(|_, v| *v != 0);
     }
 
-    fn register_need_item(&mut self, item: ItemStack) {
-        let count_remaining = self.try_use_item(&item);
-
-        *self.items_needed.entry(item.item.clone()).or_default() += count_remaining;
-    }
-
-    /// Get the items that we need to craft the items currently in the context.
-    pub fn get_needed_items(&self) -> Vec<ItemStack> {
-        let mut items = self
-            .items_needed
+    pub fn get_missing_items(&self) -> Vec<ItemStack> {
+        self.items_missing
             .iter()
             .map(|(item, count)| ItemStack {
                 item: item.clone(),
                 count: *count,
             })
-            .collect::<Vec<_>>();
-
-        items.sort_by(|a, b| a.item.0.cmp(&b.item.0));
-
-        items
+            .collect()
     }
 
-    fn cleanup(&mut self) {
-        self.items_needed.retain(|_, v| *v != 0);
-        self.items_available.retain(|_, v| *v != 0);
-
-        debug_assert!(!self.items_output.iter().any(|(_, v)| *v == 0));
+    pub fn get_available_items(&self) -> Vec<ItemStack> {
+        self.items_available
+            .iter()
+            .map(|(item, count)| ItemStack {
+                item: item.clone(),
+                count: *count,
+            })
+            .collect()
     }
 }
 
@@ -171,7 +140,7 @@ pub fn evaluate(program: &Program) -> Result<Context, EvaluationError> {
     let mut ctx = Context::new(program);
 
     for need in &program.need_section.0 {
-        ctx.have_or_craft_item(need, true)?;
+        ctx.create_items(need)?;
     }
     ctx.cleanup();
     log::debug!("context after calculations: {ctx:#?}");
@@ -209,7 +178,8 @@ mod tests {
         };
 
         let context = evaluate(&program).unwrap();
-        assert_eq!(context.get_needed_items(), vec![]);
+        assert_eq!(context.get_missing_items(), vec![]);
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -234,12 +204,13 @@ mod tests {
 
         let context = evaluate(&program).unwrap();
         assert_eq!(
-            context.get_needed_items(),
+            context.get_missing_items(),
             vec![ItemStack {
                 count: 1,
                 item: Item("input".into()),
             }]
         );
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -278,7 +249,8 @@ mod tests {
         };
 
         let context = evaluate(&program).unwrap();
-        assert_eq!(context.get_needed_items(), vec![]);
+        assert_eq!(context.get_missing_items(), vec![]);
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -315,12 +287,13 @@ mod tests {
 
         let context = evaluate(&program).unwrap();
         assert_eq!(
-            context.get_needed_items(),
+            context.get_missing_items(),
             vec![ItemStack {
                 count: 1,
                 item: Item("input".into()),
             }]
         );
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -345,12 +318,13 @@ mod tests {
 
         let context = evaluate(&program).unwrap();
         assert_eq!(
-            context.get_needed_items(),
+            context.get_missing_items(),
             vec![ItemStack {
                 count: 10,
                 item: Item("input".into()),
             }]
         );
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -393,12 +367,13 @@ mod tests {
 
         let context = evaluate(&program).unwrap();
         assert_eq!(
-            context.get_needed_items(),
+            context.get_missing_items(),
             vec![ItemStack {
                 count: 2,
                 item: Item("input".into()),
             }]
         );
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -429,12 +404,13 @@ mod tests {
 
         let context = evaluate(&program).unwrap();
         assert_eq!(
-            context.get_needed_items(),
+            context.get_missing_items(),
             vec![ItemStack {
                 count: 2,
                 item: Item("input".into()),
             }]
         );
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
@@ -467,7 +443,8 @@ mod tests {
         };
 
         let context = evaluate(&program).unwrap();
-        assert_eq!(context.get_needed_items(), vec![]);
+        assert_eq!(context.get_missing_items(), vec![]);
+        assert_eq!(context.get_available_items(), vec![]);
     }
 
     #[test]
