@@ -697,8 +697,8 @@ function __wbg_get_imports() {
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper140 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 22, __wbg_adapter_18);
+    imports.wbg.__wbindgen_closure_wrapper127 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 17, __wbg_adapter_18);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper455 = function(arg0, arg1, arg2) {
@@ -752,7 +752,7 @@ async function __wbg_init(input) {
     if (wasm !== undefined) return wasm;
 
     if (typeof input === 'undefined') {
-        input = new URL('game-recipe-calc-3c439ba9c5e077e5_bg.wasm', import.meta.url);
+        input = new URL('game-recipe-calc-fd54c56a3cef43cc_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
