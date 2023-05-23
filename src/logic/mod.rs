@@ -90,6 +90,12 @@ pub struct Recipe {
 }
 
 impl Recipe {
+    pub fn multiplied_by(&self, count: u64) -> Self {
+        let mut cloned = self.clone();
+        cloned.multiply(count);
+        cloned
+    }
+
     pub fn multiply(&mut self, count: u64) {
         self.output.count *= count;
 

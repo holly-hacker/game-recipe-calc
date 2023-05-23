@@ -83,10 +83,13 @@ impl Context {
         };
 
         // we have a known recipe, now execute it until we have all the items we need
-        // this is suboptimal, the loop will be executed many times for a large amount of items
-        // TODO: maybe we can multiple the recipe until we have the needed amount of items?
+        // we create a pseudo-recipe
         let mut item_count_created = 0;
-        while item_count_created < item_count_needed {
+
+        // integer div that rounds up. see also https://github.com/rust-lang/rfcs/issues/2844
+        let iterations_needed = (item_count_needed + recipe.output.count - 1) / recipe.output.count;
+        let multiplied_recipe = recipe.multiplied_by(iterations_needed);
+        {
             self.depth += 1;
 
             if self.depth > Self::MAX_DEPTH {
@@ -94,16 +97,14 @@ impl Context {
             }
 
             // mark this recipe as being executed
-            *self.executed_recipes.entry(recipe.clone()).or_default() += 1;
+            *self.executed_recipes.entry(recipe).or_default() += 1;
 
-            for input in &recipe.inputs {
+            for input in &multiplied_recipe.inputs {
                 self.create_items(input)?;
             }
 
-            // TODO: not actually creating the result?
-
             self.depth -= 1;
-            item_count_created += recipe.output.count;
+            item_count_created += multiplied_recipe.output.count;
         }
 
         let items_created_too_many = item_count_created - item_count_needed;
@@ -145,11 +146,7 @@ impl Context {
         self.executed_recipes
             .iter()
             .rev()
-            .map(|(recipe, count)| {
-                let mut r = recipe.clone();
-                r.multiply(*count);
-                r
-            })
+            .map(|(recipe, count)| recipe.multiplied_by(*count))
             .collect()
     }
 }
