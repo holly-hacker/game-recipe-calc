@@ -43,15 +43,25 @@ impl Program {
 
         // TODO: show which items will actually be used?
 
-        result.push_str("Missing items:\n");
-        for stack in context.get_missing_items() {
-            result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+        let missing_items = context.get_missing_items();
+        if missing_items.is_empty() {
+            result.push_str("You have all the required items!\n");
+        } else {
+            result.push_str("Missing items:\n");
+            for stack in missing_items {
+                result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+            }
         }
         result.push('\n');
 
-        result.push_str("Leftover items after crafting:\n");
-        for stack in context.get_available_items() {
-            result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+        let leftover_items = context.get_available_items();
+        if leftover_items.is_empty() {
+            result.push_str("No items are left over after crafting.\n");
+        } else {
+            result.push_str("Leftover items after crafting:\n");
+            for stack in leftover_items {
+                result.push_str(&format!("- {} {}\n", stack.count, stack.item.0));
+            }
         }
         result.push('\n');
 
