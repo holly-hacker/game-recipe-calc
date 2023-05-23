@@ -9,6 +9,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 console_log = { version = "1.0.0", features = ["color"] }
+indexmap = { version = "1.9.3", features = ["std"] }
 log = "0.4.17"
 monaco = { git = "https://github.com/siku2/rust-monaco/", rev = "794a4cc7819f9ed7eb06559e24f75a41e23cf22a", features = ["yew-components"] }
 nom = "7.1"

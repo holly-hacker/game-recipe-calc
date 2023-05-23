@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use std::collections::HashMap;
 
 use super::{Item, ItemStack, Program, Recipe};
@@ -10,12 +11,14 @@ pub enum EvaluationError {
 #[derive(Debug, Default)]
 pub struct Context {
     /// Items that can be used for crafting
-    items_available: HashMap<Item, u64>,
+    items_available: IndexMap<Item, u64>,
     /// Items that are required to craft the item but are missing
-    items_missing: HashMap<Item, u64>,
+    items_missing: IndexMap<Item, u64>,
 
     /// A map with a recipe for each item we can craft.
     recipes: HashMap<Item, Recipe>,
+
+    executed_recipes: IndexMap<Recipe, u64>,
 
     /// The current recursion depth. Limited to [Context::MAX_DEPTH].
     depth: usize,
@@ -81,6 +84,7 @@ impl Context {
 
         // we have a known recipe, now execute it until we have all the items we need
         // this is suboptimal, the loop will be executed many times for a large amount of items
+        // TODO: maybe we can multiple the recipe until we have the needed amount of items?
         let mut item_count_created = 0;
         while item_count_created < item_count_needed {
             self.depth += 1;
@@ -88,6 +92,9 @@ impl Context {
             if self.depth > Self::MAX_DEPTH {
                 return Err(EvaluationError::MaxDepthExceeded);
             }
+
+            // mark this recipe as being executed
+            *self.executed_recipes.entry(recipe.clone()).or_default() += 1;
 
             for input in &recipe.inputs {
                 self.create_items(input)?;
@@ -130,6 +137,18 @@ impl Context {
             .map(|(item, count)| ItemStack {
                 item: item.clone(),
                 count: *count,
+            })
+            .collect()
+    }
+
+    pub fn get_executed_recipes(&self) -> Vec<Recipe> {
+        self.executed_recipes
+            .iter()
+            .rev()
+            .map(|(recipe, count)| {
+                let mut r = recipe.clone();
+                r.multiply(*count);
+                r
             })
             .collect()
     }
