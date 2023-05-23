@@ -6,7 +6,7 @@ You may find this tool useful inside games with crafting systems, such as Minecr
 
 ## Example
 
-![Example screenshot](https://github.com/holly-hacker/game-recipe-calc/assets/13605369/03094694-5758-404f-84a8-7f9f19edf8cf)
+![Example screenshot](https://github.com/holly-hacker/game-recipe-calc/assets/13605369/0fd8eeca-7482-4656-9165-95de7c64405a)
 
 ## Limitation
 
