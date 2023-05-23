@@ -752,7 +752,7 @@ async function __wbg_init(input) {
     if (wasm !== undefined) return wasm;
 
     if (typeof input === 'undefined') {
-        input = new URL('game-recipe-calc-fd54c56a3cef43cc_bg.wasm', import.meta.url);
+        input = new URL('game-recipe-calc-c2d409817f616a3f_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
