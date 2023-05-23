@@ -97,7 +97,7 @@ impl Context {
             }
 
             // mark this recipe as being executed
-            *self.executed_recipes.entry(recipe).or_default() += 1;
+            *self.executed_recipes.entry(recipe).or_default() += iterations_needed;
 
             for input in &multiplied_recipe.inputs {
                 self.create_items(input)?;
